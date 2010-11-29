@@ -1,0 +1,59 @@
+= RailsDbBrowser
+
+Simple database browser for Rails application backed by ActiveRecord
+
+== Instalation
+
+=== Rails 2.3
+
+in config/environment.rb
+
+    config.gem 'rails_db_browser'
+
+and then create an app/metal/db_browse.rb
+
+    DbBrowse = RailsDbBrowser::Runner.new('/db_browse')
+    
+=== Rails 3
+
+in Rails 3 in Gemfile
+
+    gem 'rails_db_browser'
+
+in config/routes.rb
+
+  match "db_browse(/*s)", :to => RailsDbBrowser::Runner.new('/db_browse')
+
+== Security
+
+It is up to you to provide security.
+
+You could check environment and run browser only in development.
+If you user Rails 2.3 then you still should provide empty Rack application as metal
+
+  class DbBrowse
+    def self.call(env)
+      [404, nil, nil]
+    end
+  end
+  
+You could use Rack::Builder with combination of any Rack authentication middleware
+
+  DbBrowse = Rack::Builder.new do
+    use Rack::Auth::Basic, 'db_browser' do |user, password|
+      user == 'admin' && password == 'iamgod'
+    end
+    run RailsDbBrowser::Runner.new('/db_browse')
+  end
+  
+(Well, I've tested it in Rails2.3. Rails3 application with Devise falls on wrong password) 
+
+== Repository
+
+Source is hosted on github
+
+http://github.com/funny-falcon/rails_db_browser
+
+== Copyright
+
+Copyright (c) 2010 Sokolov Yura aka funny_falcon, released under the MIT license
