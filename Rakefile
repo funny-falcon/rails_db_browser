@@ -1,4 +1,5 @@
 require 'rake'
+require 'rake/rdoctask'
 
 desc 'Generate documentation for the db_browser plugin.'
 Rake::RDocTask.new(:rdoc) do |rdoc|
