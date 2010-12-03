@@ -84,14 +84,23 @@ HAML
     
     def select_all(sql)
       set_default_perpage
-      if per_page = params[:perpage].presence.try(:to_i)
-        @count = connection.select_value("select count(*) from (#{sql}) as t")
-        @pages = (@count.to_f / per_page.to_i).ceil
-        @page = (params[:page].presence || '1').to_i
-        sql = "select * from (#{sql}) as t"
-        connection.add_limit_offset!( sql, :limit => per_page, :offset => per_page * (@page - 1))
+      case sql
+      when /\s*select/i , /\s*(update|insert|delete).+returning/im
+        if sql =~ /\s*select/i && per_page = params[:perpage].presence.try(:to_i)
+          @count = connection.select_value("select count(*) from (#{sql}) as t")
+          @pages = (@count.to_f / per_page.to_i).ceil
+          @page = (params[:page].presence || '1').to_i
+          sql = "select * from (#{sql}) as t"
+          connection.add_limit_offset!( sql, :limit => per_page, :offset => per_page * (@page - 1))
+        end
+        @rezult = connection.select_all( sql )
+      when /\s*update/i
+        @rezult = connection.update( sql )
+      when /\s*insert/i
+        @rezult = connection.insert( sql )
+      when /\s*delete/i
+        @rezult = connection.delete( sql )
       end
-      @rezult = connection.select_all( sql )
     end
     
     get '/t/:table/s' do
@@ -161,28 +170,31 @@ HAML
 .rezult
   - if @rezult
     - if @rezult.present? || @keys
-      - keys = @keys || @rezult.first.keys.sort
-      - keys = (fields_to_head & keys) | (keys - fields_to_head)
-      - keys = (keys - fields_to_tail) | (fields_to_tail & keys)
-      %strong= "Total: #{@count || @rezult.size}"
-      - if @pages.presence.to_i > 1
-        = haml :pages, :layout => false
-      %table
-        %thead
-          %tr
-            - keys.each do |key|
-              %th&= key
-        %tbody
-          - @rezult.each do |row|
+      - if @rezult.is_a? Array
+        - keys = @keys || @rezult.first.keys.sort
+        - keys = (fields_to_head & keys) | (keys - fields_to_head)
+        - keys = (keys - fields_to_tail) | (fields_to_tail & keys)
+        %strong= "Total: #{@count || @rezult.size}"
+        - if @pages.presence.to_i > 1
+          = haml :pages, :layout => false
+        %table
+          %thead
             %tr
               - keys.each do |key|
-                - value = row[key]
-                - if value.try(:strip).present?
-                  %td&= value
-                - else
-                  %td.inspect&= value.inspect
-      - if @pages.presence.to_i > 1
-        = haml :pages, :layout => false
+                %th&= key
+          %tbody
+            - @rezult.each do |row|
+              %tr
+                - keys.each do |key|
+                  - value = row[key]
+                  - if value.try(:strip).present?
+                    %td&= value
+                  - else
+                    %td.inspect&= value.inspect
+        - if @pages.presence.to_i > 1
+          = haml :pages, :layout => false
+      - else
+        & Rezult: #{@rezult.inspect} 
     - else
       Has no rezult
 HAML
@@ -233,6 +245,7 @@ HAML
       .rezult
         clear: left
   %body
+    &= @flash if @flash 
     = haml :dbtables, :layout => false
     %div.main= yield
     
