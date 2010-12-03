@@ -133,7 +133,9 @@ HAML
     get '/t/:table' do
       @keys = columns(params[:table]).map{|c| c.name}
       quoted_name = connection.quote_table_name(params[:table])
-      select_all( "select * from #{quoted_name}" )
+      sql = "select * from #{quoted_name}"
+      sql << "where #{params[:where]}" if params[:where].try(:strip).present?
+      select_all( sql )
       haml <<'HAML'
 %h1&= "Table #{params[:table]}"
 %a{:href=>keep_params(env['SCRIPT_NAME'])} goto queries
@@ -141,6 +143,11 @@ HAML
 %form(method="get")
   = connection_field
   = per_page_field
+  %br
+  %label(for='where') Where:
+  %br
+  %textarea.where(name="where" cols="60" rows=9)&= params[:where]
+  %br
   %input(type="submit")
 = haml :rezult, :layout => false
 HAML
@@ -153,13 +160,13 @@ HAML
       else
         set_default_perpage
       end
-      @value = params[:query] || DEFAULT_QUERY
+      @query = params[:query] || DEFAULT_QUERY
       haml <<'HAML'
 %form(method="get")
   = connection_field
   = per_page_field
   %br
-  %textarea(name="query" cols="60" rows=10)= @value
+  %textarea(name="query" cols="60" rows=10)&= @query
   %br
   %input(type="submit")
   = haml :rezult, :layout => false
@@ -215,8 +222,11 @@ HAML
 %html
   %style
     :sass
+      body
+        font-size: 0.8em
       $hover-background-color: #dfd
       table
+        font-size: 100%
         border-spacing: 0
         thead tr th
           border-bottom: 1px solid black
@@ -236,7 +246,7 @@ HAML
           margin: 0.5em 0
           padding: 0
         .list
-          height: 200px
+          height: 20em
           overflow: auto
           .dbtable
             a.q
