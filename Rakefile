@@ -19,8 +19,6 @@ begin
     gemspec.email = "funny.falcon@gmail.com"
     gemspec.homepage = "http://github.com/funny-falcon/rails_db_browser"
     gemspec.authors = ["Sokolov Yura aka funny_falcon"]
-    gemspec.add_dependency('rails')
-    gemspec.add_dependency('activerecord')
     gemspec.add_dependency('sinatra')
     gemspec.add_dependency('haml')
   end
