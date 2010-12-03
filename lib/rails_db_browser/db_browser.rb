@@ -89,7 +89,8 @@ HAML
         if sql =~ /\s*select/i && per_page = params[:perpage].presence.try(:to_i)
           @count = connection.select_value("select count(*) from (#{sql}) as t")
           @pages = (@count.to_f / per_page.to_i).ceil
-          @page = (params[:page].presence || '1').to_i
+          params[:page] ||= '1'
+          @page = params[:page].to_i
           sql = "select * from (#{sql}) as t"
           connection.add_limit_offset!( sql, :limit => per_page, :offset => per_page * (@page - 1))
         end
@@ -209,8 +210,16 @@ HAML
     
     template :pages do <<'HAML'
 .pages
-  - 1.upto(@pages) do |i|
-    - unless i == params[:page].to_i
+  - page = params[:page].to_i
+  - nums = (1..5).to_a
+  - nums |= ((page-3)..(page+3)).to_a.find_all{|i| (1..@pages).include?(i)}
+  - nums |= ((@pages-5)..@pages).to_a
+  - last_i = 0
+  - nums.each do |i|
+    - if i > last_i + 1
+      &hellip;
+    - last_i = i
+    - unless i == page
       %a{:href=> merge_params("page" => i)}= i
     - else
       = i
