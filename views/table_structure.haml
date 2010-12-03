@@ -1,0 +1,21 @@
+%h1&= "Table #{params[:table]}"
+%a{:href=>keep_params(env['SCRIPT_NAME'])} goto queries
+%a{:href=>keep_params(env['SCRIPT_NAME']+"/t/#{params[:table]}")} goto table
+%form(method="get")
+  = connection_field
+  %input{:type=>"hidden", :name=>"perpage", :value=>params[:perpage]}
+  %input(type="submit")
+%table.columns
+  %thead
+    %tr
+      %th Name
+      %th Type
+      %th Default
+      %th Not Null
+  %tbody
+    - @columns.each do |col|
+      %tr
+        %td= col.name
+        %td= col.sql_type
+        %td&= col.default.inspect
+        %td= col.null

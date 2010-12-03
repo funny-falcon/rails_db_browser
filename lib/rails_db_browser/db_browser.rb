@@ -1,6 +1,7 @@
 module RailsDbBrowser
   class DbBrowser < Sinatra::Base
     enable :session
+    set :views, File.join(File.dirname(__FILE__), '../../views')
     
     class FakeModel < ActiveRecord::Base
       @abstract_class = true
@@ -37,23 +38,11 @@ module RailsDbBrowser
       end
       
       def connection_field
-        haml <<'HAML', :layout => false
-%label(for="connection_name") Connection:
-%select.connection_name(name="connection")
-  %option(value="") Default
-  - configurations.keys.each do |n|
-    %option{:value=>n, :selected=>n == params[:connection]}= n
-HAML
+        haml :_connection_field, :layout => false
       end
       
       def per_page_field
-        haml <<'HAML', :layout => false
-%label(for="rezult_perpage") Per page:
-%select.rezult_perpage(name="perpage")
-  %option(value="") No Limits
-  - %w{10 25 50 100 250 500 1000}.each do |n|
-    %option{:value=>n, :selected=> n == params[:perpage]}= n
-HAML
+        haml :_per_page_field, :layout => false
       end
       
       def fields_to_head
@@ -106,29 +95,7 @@ HAML
     
     get '/t/:table/s' do
       @columns = columns(params[:table])
-      haml <<'HAML'
-%h1&= "Table #{params[:table]}"
-%a{:href=>keep_params(env['SCRIPT_NAME'])} goto queries
-%a{:href=>keep_params(env['SCRIPT_NAME']+"/t/#{params[:table]}")} goto table
-%form(method="get")
-  = connection_field
-  %input{:type=>"hidden", :name=>"perpage", :value=>params[:perpage]}
-  %input(type="submit")
-%table.columns
-  %thead
-    %tr
-      %th Name
-      %th Type
-      %th Default
-      %th Not Null
-  %tbody
-    - @columns.each do |col|
-      %tr
-        %td= col.name
-        %td= col.sql_type
-        %td&= col.default.inspect
-        %td= col.null
-HAML
+      haml :table_structure
     end
     
     get '/t/:table' do
@@ -137,21 +104,7 @@ HAML
       sql = "select * from #{quoted_name}"
       sql << "where #{params[:where]}" if params[:where].try(:strip).present?
       select_all( sql )
-      haml <<'HAML'
-%h1&= "Table #{params[:table]}"
-%a{:href=>keep_params(env['SCRIPT_NAME'])} goto queries
-%a{:href=>keep_params(env['SCRIPT_NAME']+"/t/#{params[:table]}/s")} goto schema
-%form(method="get")
-  = connection_field
-  = per_page_field
-  %br
-  %label(for='where') Where:
-  %br
-  %textarea.where(name="where" cols="60" rows=9)&= params[:where]
-  %br
-  %input(type="submit")
-= haml :rezult, :layout => false
-HAML
+      haml :table_content
     end
     
     DEFAULT_QUERY = 'select * from'
@@ -162,125 +115,7 @@ HAML
         set_default_perpage
       end
       @query = params[:query] || DEFAULT_QUERY
-      haml <<'HAML'
-%form(method="get")
-  = connection_field
-  = per_page_field
-  %br
-  %textarea(name="query" cols="60" rows=10)&= @query
-  %br
-  %input(type="submit")
-  = haml :rezult, :layout => false
-HAML
-    end
-    
-    template :rezult do <<'HAML'
-.rezult
-  - if @rezult
-    - if @rezult.present? || @keys
-      - if @rezult.is_a? Array
-        - keys = @keys || @rezult.first.keys.sort
-        - keys = (fields_to_head & keys) | (keys - fields_to_head)
-        - keys = (keys - fields_to_tail) | (fields_to_tail & keys)
-        %strong= "Total: #{@count || @rezult.size}"
-        - if @pages.presence.to_i > 1
-          = haml :pages, :layout => false
-        %table
-          %thead
-            %tr
-              - keys.each do |key|
-                %th&= key
-          %tbody
-            - @rezult.each do |row|
-              %tr
-                - keys.each do |key|
-                  - value = row[key]
-                  - if value.try(:strip).present?
-                    %td&= value
-                  - else
-                    %td.inspect&= value.inspect
-        - if @pages.presence.to_i > 1
-          = haml :pages, :layout => false
-      - else
-        & Rezult: #{@rezult.inspect} 
-    - else
-      Has no rezult
-HAML
-    end
-    
-    template :pages do <<'HAML'
-.pages
-  - page = params[:page].to_i
-  - nums = (1..5).to_a
-  - nums |= ((page-3)..(page+3)).to_a.find_all{|i| (1..@pages).include?(i)}
-  - nums |= ((@pages-5)..@pages).to_a
-  - last_i = 0
-  - nums.each do |i|
-    - if i > last_i + 1
-      &hellip;
-    - last_i = i
-    - unless i == page
-      %a{:href=> merge_params("page" => i)}= i
-    - else
-      = i
-HAML
-    end
-    
-    template :layout do
-      <<'HAML'
-%html
-  %style
-    :sass
-      body
-        font-size: 0.8em
-      $hover-background-color: #dfd
-      table
-        font-size: 100%
-        border-spacing: 0
-        thead tr th
-          border-bottom: 1px solid black
-        td, th
-          border-right: 1px solid black
-          &:last-child
-            border-right: 0 none
-        td.inspect
-          background-color: grey
-        tbody tr:hover
-          background-color: $hover-background-color
-      .dbtables
-        float: left
-        width: 200px
-        padding-right: 10px
-        h4
-          margin: 0.5em 0
-          padding: 0
-        .list
-          height: 20em
-          overflow: auto
-          .dbtable
-            a.q
-              display: inline-block
-              width: 155px
-      .rezult
-        clear: left
-  %body
-    &= @flash if @flash 
-    = haml :dbtables, :layout => false
-    %div.main= yield
-    
-HAML
-    end
-    
-    template :dbtables do <<'HAML'
-%div.dbtables
-  %h4 Tables list:
-  - url_pat = keep_params(env["SCRIPT_NAME"] + "/t/%t%")
-  .list
-    - connection.tables.sort.each do |tname|
-      .dbtable
-        %a.q{:href=>url_pat.sub("/%t%", "/#{tname}")}= tname
-        %a.s{:href=>url_pat.sub("/%t%", "/#{tname}/s")} (s)
-HAML
+      haml :index
     end
   end
 end

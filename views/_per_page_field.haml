@@ -1,0 +1,6 @@
+%label(for="rezult_perpage") Per page:
+%select.rezult_perpage(name="perpage")
+  %option(value="") No Limits
+  - %w{10 25 50 100 250 500 1000}.each do |n|
+    %option{:value=>n, :selected=> n == params[:perpage]}= n
+

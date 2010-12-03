@@ -1,0 +1,5 @@
+%label(for="connection_name") Connection:
+%select.connection_name(name="connection")
+  %option(value="") Default
+  - configurations.keys.each do |n|
+    %option{:value=>n, :selected=>n == params[:connection]}= n

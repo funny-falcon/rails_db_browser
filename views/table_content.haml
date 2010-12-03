@@ -1,0 +1,13 @@
+%h1&= "Table #{params[:table]}"
+%a{:href=>keep_params(env['SCRIPT_NAME'])} goto queries
+%a{:href=>keep_params(env['SCRIPT_NAME']+"/t/#{params[:table]}/s")} goto schema
+%form(method="get")
+  = connection_field
+  = per_page_field
+  %br
+  %label(for='where') Where:
+  %br
+  %textarea.where(name="where" cols="60" rows=9)&= params[:where]
+  %br
+  %input(type="submit")
+= haml :rezult, :layout => false

@@ -1,0 +1,14 @@
+.pages
+  - page = params[:page].to_i
+  - nums = (1..5).to_a
+  - nums |= ((page-3)..(page+3)).to_a.find_all{|i| (1..@pages).include?(i)}
+  - nums |= ((@pages-5)..@pages).to_a
+  - last_i = 0
+  - nums.each do |i|
+    - if i > last_i + 1
+      &hellip;
+    - last_i = i
+    - unless i == page
+      %a{:href=> merge_params("page" => i)}= i
+    - else
+      = i

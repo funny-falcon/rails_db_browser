@@ -1,0 +1,8 @@
+%form(method="get")
+  = connection_field
+  = per_page_field
+  %br
+  %textarea(name="query" cols="60" rows=10)&= @query
+  %br
+  %input(type="submit")
+  = haml :rezult, :layout => false
