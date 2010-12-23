@@ -56,7 +56,7 @@ module RailsDbBrowser
       end
 
       def table_names
-        @connection.tables
+        @connection.tables.sort
       end
 
       # fields to see first
