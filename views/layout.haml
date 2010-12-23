@@ -1,39 +1,5 @@
 %html
-  %style
-    :sass
-      body
-        font-size: 0.8em
-      $hover-background-color: #dfd
-      table
-        font-size: 100%
-        border-spacing: 0
-        thead tr th
-          border-bottom: 1px solid black
-        td, th
-          border-right: 1px solid black
-          &:last-child
-            border-right: 0 none
-        td.inspect
-          background-color: grey
-        tbody tr:hover
-          background-color: $hover-background-color
-      .dbtables
-        float: left
-        width: 200px
-        padding-right: 10px
-        h4
-          margin: 0.5em 0
-          padding: 0
-        .list
-          height: 20em
-          overflow: auto
-          .dbtable
-            a.q
-              display: inline-block
-              width: 155px
-      .rezult
-        clear: left
-    -#end
+  %link(rel="stylesheet" type="text/css" href="#{env['SCRIPT_NAME']}/css.css")
   %body
     &= @flash if @flash 
     = haml :dbtables, :layout => false
