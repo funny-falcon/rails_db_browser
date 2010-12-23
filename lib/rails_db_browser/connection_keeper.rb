@@ -97,7 +97,7 @@ module RailsDbBrowser
 
           rez[:rows] = select_all( sql )
 
-          unless rez[:fields].present? && rez[:rows].blank?
+          unless rez[:fields].present? || rez[:rows].blank?
             rez[:fields] = self.sort_fields(rez[:rows].first.keys)
           end
 

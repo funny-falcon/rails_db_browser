@@ -37,9 +37,6 @@
       Traceback:
       %pre
         - @result.error.backtrace.each do |l|
-          - if l.starts_with?(Rails.root)
-            &= l.sub(Rails.root, '')
-          - else
-            &= l
+          &= l.sub(Rails.root, '')
   - else
     Has no result
