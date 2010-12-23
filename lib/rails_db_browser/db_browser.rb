@@ -74,8 +74,14 @@ HAML
     
     get '/t/:table' do
       quoted_name = connection.quote_table_name(params[:table])
-      sql = "select * from #{quoted_name}"
-      sql << "where #{params[:where]}" if params[:where].try(:strip).present?
+      sql = "select * from #{quoted_name} "
+      unless params[:where].try(:strip).present?
+        params[:where] = "WHERE 1=1"
+        if column_names(params[:table]).include?("id")
+          params[:where] += "\nORDER BY id"
+        end
+      end
+      sql << params[:where]
       @result = select_all( sql, column_names(params[:table]) )
       haml :table_content
     end
