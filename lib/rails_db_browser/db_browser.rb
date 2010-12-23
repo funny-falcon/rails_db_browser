@@ -63,7 +63,7 @@ HAML
       connection.query(sql,
                        :perpage => params[:perpage],
                        :page    => params[:page],
-                       :field   => fields
+                       :fields  => fields
                       )
     end
     
