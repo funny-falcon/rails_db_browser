@@ -16,6 +16,6 @@
     - @columns.each do |col|
       %tr
         %td= col.name
-        %td= col.sql_type
+        %td= col.type
         %td&= col.default.inspect
         %td= col.null

@@ -1,6 +1,7 @@
 # RailsDbBrowser
 require 'sinatra/base'
 require 'rails_db_browser/url_truncate'
+require 'rails_db_browser/connection_keeper'
 require 'rails_db_browser/db_browser'
 
 module RailsDbBrowser

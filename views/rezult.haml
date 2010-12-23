@@ -1,30 +1,45 @@
 .rezult
-  - if @rezult
-    - if @rezult.present? || @keys
-      - if @rezult.is_a? Array
-        - keys = @keys || @rezult.first.keys.sort
-        - keys = (fields_to_head & keys) | (keys - fields_to_head)
-        - keys = (keys - fields_to_tail) | (fields_to_tail & keys)
-        %strong= "Total: #{@count || @rezult.size}"
-        - if @pages.presence.to_i > 1
+  - if @result
+    - if @result.rows?
+      - if @result.count > 0
+        - fields = @result.fields
+        %strong= "Total: #{@result.count}"
+        - if @result.pages > 1
           = haml :pages, :layout => false
         %table
           %thead
             %tr
-              - keys.each do |key|
-                %th&= key
+              - fields.each do |field|
+                %th&= field
           %tbody
-            - @rezult.each do |row|
+            - @result.rows.each do |row|
               %tr
-                - keys.each do |key|
-                  - value = row[key]
+                - fields.each do |field|
+                  - value = row[field]
                   - if value.try(:strip).present?
                     %td&= value
                   - else
                     %td.inspect&= value.inspect
-        - if @pages.presence.to_i > 1
+        - if @result.pages > 1
           = haml :pages, :layout => false
       - else
-        & Rezult: #{@rezult.inspect} 
-    - else
-      Has no rezult
+        Has no returned rows
+    - elsif @result.value? 
+      Rezult:
+      &= @result.value.inspect
+    - elsif @result.error?
+      Error:
+      &= @result.error.class.name
+      %br/
+      Message:
+      &= @result.error.message
+      %br/
+      Traceback:
+      %pre
+        - @result.error.backtrace.each do |l|
+          - if l.starts_with?(Rails.root)
+            &= l.sub(Rails.root, '')
+          - else
+            &= l
+  - else
+    Has no result

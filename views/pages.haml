@@ -1,8 +1,9 @@
 .pages
   - page = params[:page].to_i
   - nums = (1..5).to_a
-  - nums |= ((page-3)..(page+3)).to_a.find_all{|i| (1..@pages).include?(i)}
-  - nums |= ((@pages-5)..@pages).to_a
+  - nums |= ((page-3)..(page+3)).to_a
+  - nums |= ((@result.pages-5)..@result.pages).to_a
+  - nums = nums.find_all{|i| (1..@result.pages).include?(i)}
   - last_i = 0
   - nums.each do |i|
     - if i > last_i + 1

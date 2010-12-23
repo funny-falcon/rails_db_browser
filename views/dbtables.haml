@@ -2,7 +2,7 @@
   %h4 Tables list:
   - url_pat = keep_params(env["SCRIPT_NAME"] + "/t/%t%")
   .list
-    - connection.tables.sort.each do |tname|
+    - connection.table_names.each do |tname|
       .dbtable
         %a.q{:href=>url_pat.sub("/%t%", "/#{tname}")}= tname
         %a.s{:href=>url_pat.sub("/%t%", "/#{tname}/s")} (s)
