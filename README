@@ -40,10 +40,11 @@ If you user Rails 2.3 then you still should provide empty Rack application as me
 You could use Rack::Builder with combination of any Rack authentication middleware
 
   DbBrowse = Rack::Builder.new do
+    use RailsDbBrowser::URLTruncate, '/db_browse'
     use Rack::Auth::Basic, 'db_browser' do |user, password|
       user == 'admin' && password == 'iamgod'
     end
-    run RailsDbBrowser::Runner.new('/db_browse')
+    run RailsDbBrowser::DbBrowser
   end
   
 (Well, I've tested it in Rails2.3. Rails3 application with Devise falls on wrong password) 
