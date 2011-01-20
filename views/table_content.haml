@@ -1,6 +1,6 @@
 %h1&= "Table #{params[:table]}"
-%a{:href=>keep_params(env['SCRIPT_NAME'])} goto queries
-%a{:href=>keep_params(env['SCRIPT_NAME']+"/t/#{params[:table]}/s")} goto schema
+%a{:href=>url('')} goto queries
+%a{:href=>table_scheme_url(params[:table])} goto schema
 %form(method="get")
   = connection_field
   = per_page_field

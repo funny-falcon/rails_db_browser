@@ -18,9 +18,15 @@ module RailsDbBrowser
         keeper.connection_names
       end
       
-      def keep_params(url, add_params={})
-        query = params.slice("connection", "perpage").merge(add_params).to_query
-        query.present? ? "#{url}?#{query}" : url
+      def url(path, add_params={})
+        path = path.sub(%r{/+$},'')
+        query = params.to_query
+        relative = query.present? ? "#{path}?#{query}" : path
+        "#{request.script_name}#{relative}"
+      end
+
+      def keep_params(path, add_params={})
+        url path, params.slice("connection", "perpage").merge(add_params)
       end
       
       def merge_params(add_params)
@@ -52,6 +58,14 @@ module RailsDbBrowser
     & #{k} = #{v.inspect}
 HAML
       end
+
+      def table_content_url(table)
+        keep_params("/t/#{table}")
+      end
+
+      def table_scheme_url(table)
+        keep_params("/s/#{table}")
+      end
     end
     
     def set_default_perpage
@@ -67,7 +81,7 @@ HAML
                       )
     end
     
-    get '/t/:table/s' do
+    get '/s/:table' do
       @columns = columns(params[:table])
       haml :table_structure
     end
