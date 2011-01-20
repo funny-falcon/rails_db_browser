@@ -4,6 +4,8 @@ $hover-background-color: #dfd
 table
   font-size: 100%
   border-spacing: 0
+  thead tr
+    background-color: lightgrey
   thead tr th
     border-bottom: 1px solid black
   td, th
@@ -12,6 +14,8 @@ table
       border-right: 0 none
   td.inspect
     background-color: grey
+  tbody tr:nth-child(odd)
+    background-color: lightcyan
   tbody tr:hover
     background-color: $hover-background-color
 .dbtables
