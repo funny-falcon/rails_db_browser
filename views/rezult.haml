@@ -16,10 +16,11 @@
               %tr
                 - fields.each do |field|
                   - value = row[field]
-                  - if value.try(:strip).present?
-                    %td&= value
-                  - else
-                    %td.inspect&= value.inspect
+                  - empty = !value.try(:strip).present?
+                  - if empty
+                    - value = value.inspect
+                  %td{:class => (empty && 'inspect')}
+                    %pre= preserve(html_escape(value))
         - if @result.pages > 1
           = haml :pages, :layout => false
       - else
