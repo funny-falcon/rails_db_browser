@@ -1,3 +1,4 @@
+%script{:src => url('/result.js')} 
 .rezult
   - if @result
     - if @result.rows?
@@ -6,23 +7,45 @@
         %strong= "Total: #{@result.count}"
         - if @result.pages > 1
           = haml :pages, :layout => false
-        %table
+        %table.result
           %thead
-            %tr
-              - fields.each do |field|
-                %th&= field
+            - if fields.any?{|f| f.include?('.')}
+              - tables = extract_tables(fields)
+              %tr
+                - tables.each do |t|
+                  %th{:colspan => t.columns.size}&= t.table
+              %tr
+                - tables.map(&:columns).flatten.each do |column|
+                  %th&= column
+            - else
+              %tr
+                - fields.each do |field|
+                  %th&= field
           %tbody
             - @result.rows.each do |row|
+              - row_ids = {}
               %tr
                 - fields.each do |field|
                   - value = row[field]
+                  - if field =~ /([\w\.]+)\.(\w+)/
+                    - table, column = $1, $2
+                    - if column == 'id'
+                      - row_ids[table] = value
+                    - data = { :table => table, :column => column, :id => row_ids[table], :value => value, :nil => value.nil? }
+                  - else
+                    - data = nil
                   - empty = !value.try(:strip).present?
                   - if empty
                     - value = value.inspect
-                  %td{:class => (empty && 'inspect')}
-                    %pre= preserve(html_escape(value))
+                  %td{:class => [(empty && 'inspect'), data && data[:column] == 'id' && 'id'], :data => data}
+                    - unless value =~ /^\d+$/
+                      %pre= preserve(html_escape(value))
+                    -else
+                      = value
         - if @result.pages > 1
           = haml :pages, :layout => false
+        :javascript
+          $('td[data-column=id]').prepend('<span class="actions"> <a href="javascript:void(0)" class="edit">edit</a> <a href="javascript:void(0)" class="delete">delete</a></span>');
       - else
         Has no returned rows
     - elsif @result.value? 

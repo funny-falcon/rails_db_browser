@@ -14,10 +14,19 @@ table
       border-right: 0 none
   td.inspect
     background-color: grey
-  tbody tr:nth-child(odd)
-    background-color: lightcyan
-  tbody tr:hover
-    background-color: $hover-background-color
+  td.id
+    white-space: nowrap
+  &.result tbody
+    td, td pre
+      font-family: monospace
+    td span.actions
+      float: right
+      font-family: serif
+      font-size: 0.8em
+    tr:nth-child(odd)
+      background-color: lightcyan
+    tr:hover
+      background-color: $hover-background-color
 .dbtables
   float: left
   width: 200px

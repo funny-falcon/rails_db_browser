@@ -1,11 +1,19 @@
 module RailsDbBrowser
+  class TableColumns < Struct.new(:table, :columns)
+  end
+
   class DbBrowser < Sinatra::Base
     enable :session
     set :views, File.join(File.dirname(__FILE__), '../../views')
+    set :public, File.join(File.dirname(__FILE__), '../../public')
     set :connect_keeper, ConnectionKeeper.new
     enable :show_exceptions
 
     helpers do
+      def logger
+        ActiveRecord::Base.logger
+      end
+
       def keeper
         settings.connect_keeper
       end
@@ -20,7 +28,7 @@ module RailsDbBrowser
       
       def url(path, add_params={})
         path = path.sub(%r{/+$},'')
-        query = params.to_query
+        query = add_params.to_query
         relative = query.present? ? "#{path}?#{query}" : path
         "#{request.script_name}#{relative}"
       end
@@ -49,6 +57,23 @@ module RailsDbBrowser
       def column_names(table)
         connection.column_names(table)
       end
+
+      def extract_tables(fields)
+        tables = []
+        for field in fields
+          if field =~ /(?:([\w\.]+)\.)?(\w+)/
+            table, column = $1, $2
+          else
+            table, column = nil, field
+          end
+          if !tables.last || tables.last.table != table
+            tables << TableColumns.new(table, [column])
+          else
+            tables.last.columns << column
+          end
+        end
+        tables
+      end
       
       def inspect_env
         haml <<'HAML', :layout => false
@@ -67,20 +92,50 @@ HAML
         keep_params("/s/#{table}")
       end
     end
+
+    def quote_table_name(t)
+      connection.quote_table_name(t)
+    end
+
+    def quote_column_name(c)
+      connection.quote_column_name(c)
+    end
     
     def set_default_perpage
       params['perpage'] = '25' unless params.has_key?('perpage')
     end
+
+    def extract_fields_from_special(sql)
+      fields = []
+      sql = sql.gsub(/\[\[([\w.]+)\.\*(?:\s*-\s*((?:\w+[,\s]+)*(?:\w+))\s*)?\]\]/) do 
+        table, without = $1, ($2 || '').scan(/\w+/)
+        table_fields = column_names(table) - without
+
+        table_fields.map{|fld|
+          as = "#{table}.#{fld}"
+          fields << as
+          "#{quote_table_name(table)}.#{quote_column_name(fld)} as #{quote_column_name(as)}"
+        }.join(',')
+      end
+      [ sql, fields ]
+    end
     
     def select_all(sql, fields=nil)
       set_default_perpage
+      unless fields.present?
+        sql, fields = extract_fields_from_special(sql)
+      end
       connection.query(sql,
                        :perpage => params[:perpage],
                        :page    => params[:page],
                        :fields  => fields
                       )
     end
-    
+   
+    get '/d' do
+      File.mtime(__FILE__).to_s+"<br/>\n"+
+        env.map{|k,v| "#{k.inspect} => #{v.inspect} <br/>\n" }.join
+    end
     get '/s/:table' do
       @columns = columns(params[:table])
       haml :table_structure
