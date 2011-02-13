@@ -85,7 +85,8 @@ HAML
       end
 
       def table_content_url(table)
-        keep_params("/t/#{table}")
+        keep_params("", 
+          :query => "SELECT [[#{table}.*]] FROM #{quote_table_name(table)}\nWHERE 1=1\nORDER BY id")
       end
 
       def table_scheme_url(table)
@@ -99,6 +100,10 @@ HAML
 
     def quote_column_name(c)
       connection.quote_column_name(c)
+    end
+
+    def quote(v)
+      connection.quote(v)
     end
     
     def set_default_perpage
@@ -141,18 +146,29 @@ HAML
       haml :table_structure
     end
     
-    get '/t/:table' do
-      quoted_name = connection.quote_table_name(params[:table])
-      sql = "select * from #{quoted_name} "
-      unless params[:where].try(:strip).present?
-        params[:where] = "WHERE 1=1"
-        if column_names(params[:table]).include?("id")
-          params[:where] += "\nORDER BY id"
+    post '/t/:table' do
+      logger.warn(params.inspect)
+      table = quote_table_name(params[:table])
+      attrs = params[:attrs]
+      if id = attrs.delete('id')
+        names = []
+        sets = attrs.map{|name, value|
+          names << name
+          value = value == 'null' ? nil : value[1..-1]
+          "#{quote_column_name(name)} = #{quote(value)}"
+        }.join(', ')
+        sql = "UPDATE #{table} SET #{sets} WHERE id=#{quote(id)}"
+        rez = select_all(sql)
+        if !rez.error && select_all(sql).value > 0
+          names_sql = names.map{|n| quote_column_name(n)}.join(', ')
+          rez = select_all("SELECT #{names_sql} FROM #{table} WHERE id=#{quote(id)}")
+          return rez.rows[0].to_json
         end
       end
-      sql << params[:where]
-      @result = select_all( sql, column_names(params[:table]) )
-      haml :table_content
+      if rez.error
+        response.status = 500
+        "<pre>#{rez.error.message}</pre>"
+      end
     end
     
     DEFAULT_QUERY = 'select * from'

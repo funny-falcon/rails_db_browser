@@ -31,21 +31,30 @@
                     - table, column = $1, $2
                     - if column == 'id'
                       - row_ids[table] = value
+                      - is_id = true
+                    - else
+                      - is_id = false
                     - data = { :table => table, :column => column, :id => row_ids[table], :value => value, :nil => value.nil? }
                   - else
                     - data = nil
-                  - empty = !value.try(:strip).present?
-                  - if empty
-                    - value = value.inspect
+                  - if value == nil
+                    - value = 'nil'
+                    - empty = true
+                  - elsif value =~ /^\s*$/
+                    - value = '"'+value+'"'
+                    - empty = true
                   %td{:class => [(empty && 'inspect'), data && data[:column] == 'id' && 'id'], :data => data}
-                    - unless value =~ /^\d+$/
+                    - if value !~ /^\S+$/
                       %pre= preserve(html_escape(value))
-                    -else
+                    - elsif is_id
+                      %span.actions &nbsp;
+                      = value
+                    - else
                       = value
         - if @result.pages > 1
           = haml :pages, :layout => false
         :javascript
-          $('td[data-column=id]').prepend('<span class="actions"> <a href="javascript:void(0)" class="edit">edit</a> <a href="javascript:void(0)" class="delete">delete</a></span>');
+          fill_id_with_edit_delete($('table.result'));
       - else
         Has no returned rows
     - elsif @result.value? 

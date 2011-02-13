@@ -19,8 +19,8 @@ table
   &.result tbody
     td, td pre
       font-family: monospace
+      margin: 0
     td span.actions
-      float: right
       font-family: serif
       font-size: 0.8em
     tr:nth-child(odd)
@@ -43,3 +43,16 @@ table
         width: 155px
 .rezult
   clear: left
+#error
+  position: absolute
+  display: none
+  //width: 440px
+  z-index: 9999
+  border: red 2px solid
+  background-color: #FFEEEE
+#error_mask
+  position: absolute
+  z-index: 9000
+  display: none
+  left: 0
+  top: 0

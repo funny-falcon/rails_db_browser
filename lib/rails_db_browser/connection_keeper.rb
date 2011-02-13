@@ -29,8 +29,9 @@ module RailsDbBrowser
     # performs common operations on connection
     class Connection
       attr_accessor :connection
-      delegate :quote_table_name, :quote_column_name, :select_value, 
-               :select_all, :update, :insert, :delete,
+      delegate :quote_table_name, :quote_column_name, :quote,
+               :select_value, :select_all,
+               :update, :insert, :delete,
                :add_limit_offset!,
                :to => :connection
 

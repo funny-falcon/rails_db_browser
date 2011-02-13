@@ -1,7 +1,13 @@
 %html
   %link(rel="stylesheet" type="text/css" href="#{env['SCRIPT_NAME']}/css.css")
   %script(type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js")
+  :javascript
+    ROOT= '#{url('')}'
   %body
     &= @flash if @flash 
     = haml :dbtables, :layout => false
     %div.main= yield
+    %div#error
+      %a.close(href="javascript: void(0)") Close
+      %div.content
+    %div#error_mask
