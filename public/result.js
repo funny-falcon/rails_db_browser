@@ -10,7 +10,7 @@ $(function(){
       var $tr = $td.closest('tr');
       var table = $td.data('table');
       var id = $td.data('id');
-      var $tds = $tr.find('td[data-table='+table+']').not($td);
+      var $tds = $tr.find('td[data-table="'+table+'"]').not($td);
       return {
         $td: $td,
         $tr: $tr,

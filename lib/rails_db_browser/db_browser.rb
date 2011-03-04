@@ -159,7 +159,7 @@ HAML
         }.join(', ')
         sql = "UPDATE #{table} SET #{sets} WHERE id=#{quote(id)}"
         rez = select_all(sql)
-        if !rez.error && select_all(sql).value > 0
+        if !rez.error && rez.value > 0
           names_sql = names.map{|n| quote_column_name(n)}.join(', ')
           rez = select_all("SELECT #{names_sql} FROM #{table} WHERE id=#{quote(id)}")
           return rez.rows[0].to_json
